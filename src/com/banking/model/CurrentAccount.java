@@ -6,7 +6,7 @@ public class CurrentAccount extends Account {
 
     private static final long serialVersionUID = 1L;
 
-    private static final double OVERDRAFT_LIMIT = 10000.0;
+    private static final double OVERDRAFT_LIMIT = 10000.00;
 
     public CurrentAccount(
             String accountNumber,
@@ -14,24 +14,28 @@ public class CurrentAccount extends Account {
             String pin,
             double balance) {
 
-        super(accountNumber, customer, pin, balance);
+        super(
+                accountNumber,
+                customer,
+                pin,
+                balance
+        );
     }
 
     @Override
     public boolean withdraw(double amount) {
 
-        if (!active || !InputValidator.isValidAmount(amount)) {
-            return false;
-        }
-
-        if (amount > balance + OVERDRAFT_LIMIT) {
+        if (!active
+                || frozen
+                || !InputValidator.isValidAmount(amount)
+                || amount > balance + OVERDRAFT_LIMIT) {
             return false;
         }
 
         balance -= amount;
 
         addTransaction(
-                "WITHDRAW",
+                "WITHDRAWAL",
                 amount,
                 "Cash withdrawn from current account"
         );
@@ -40,18 +44,11 @@ public class CurrentAccount extends Account {
     }
 
     public double getOverdraftLimit() {
-
         return OVERDRAFT_LIMIT;
-    }
-
-    public double calculateInterest() {
-
-        return 0;
     }
 
     @Override
     public String getAccountType() {
-
-        return "Current Account";
+        return "CURRENT";
     }
 }

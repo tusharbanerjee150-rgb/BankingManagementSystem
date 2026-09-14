@@ -8,26 +8,22 @@ public class StatementService {
     public void generateStatement(Account account) {
 
         if (account == null) {
-
             System.out.println(
                     "\nUnable to generate statement."
             );
-
             return;
         }
 
         double totalDeposited = 0;
         double totalWithdrawn = 0;
         double totalTransferred = 0;
+        double totalReceived = 0;
 
         for (Transaction transaction :
                 account.getTransactions()) {
 
-            String type =
-                    transaction.getType();
-
-            double amount =
-                    transaction.getAmount();
+            String type = transaction.getType();
+            double amount = transaction.getAmount();
 
             if ("DEPOSIT".equalsIgnoreCase(type)) {
 
@@ -40,17 +36,20 @@ public class StatementService {
             } else if ("TRANSFER SENT".equalsIgnoreCase(type)) {
 
                 totalTransferred += amount;
+
+            } else if ("TRANSFER RECEIVED"
+                    .equalsIgnoreCase(type)) {
+
+                totalReceived += amount;
             }
         }
 
         System.out.println(
                 "\n=========================================="
         );
-
         System.out.println(
                 "            ACCOUNT STATEMENT"
         );
-
         System.out.println(
                 "=========================================="
         );
@@ -62,14 +61,12 @@ public class StatementService {
 
         System.out.println(
                 "Customer ID    : "
-                        + account.getCustomer()
-                        .getCustomerId()
+                        + account.getCustomer().getCustomerId()
         );
 
         System.out.println(
                 "Customer Name  : "
-                        + account.getCustomer()
-                        .getName()
+                        + account.getCustomer().getName()
         );
 
         System.out.println(
@@ -84,9 +81,7 @@ public class StatementService {
 
         System.out.println(
                 "Status         : "
-                        + (account.isActive()
-                        ? "ACTIVE"
-                        : "CLOSED")
+                        + account.getStatus()
         );
 
         System.out.println(
@@ -111,6 +106,11 @@ public class StatementService {
         System.out.printf(
                 "Total Transferred  : %.2f%n",
                 totalTransferred
+        );
+
+        System.out.printf(
+                "Total Received     : %.2f%n",
+                totalReceived
         );
 
         System.out.println(
@@ -154,6 +154,16 @@ public class StatementService {
             return;
         }
 
+        if (transactionType == null
+                || transactionType.trim().isEmpty()) {
+
+            System.out.println(
+                    "\nInvalid transaction filter."
+            );
+
+            return;
+        }
+
         System.out.println(
                 "\n========== FILTERED TRANSACTIONS =========="
         );
@@ -177,7 +187,7 @@ public class StatementService {
         for (Transaction transaction :
                 account.getTransactions()) {
 
-            if (transactionType.equalsIgnoreCase("ALL")
+            if ("ALL".equalsIgnoreCase(transactionType)
                     || transaction.getType()
                     .equalsIgnoreCase(transactionType)) {
 

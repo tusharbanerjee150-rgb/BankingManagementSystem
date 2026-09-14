@@ -9,16 +9,36 @@ public class Admin implements Serializable {
     private String username;
     private String password;
 
-    public Admin(String username, String password) {
+    public Admin(
+            String username,
+            String password) {
+
         this.username = username;
         this.password = password;
     }
 
     public String getUsername() {
+
         return username;
     }
 
-    public boolean verifyPassword(String enteredPassword) {
+    public boolean verifyPassword(
+            String enteredPassword) {
+
+        if (enteredPassword == null) {
+            return false;
+        }
+
         return password.equals(enteredPassword);
+    }
+
+    public boolean isValidUsername(
+            String enteredUsername) {
+
+        if (enteredUsername == null) {
+            return false;
+        }
+
+        return username.equals(enteredUsername);
     }
 }

@@ -14,24 +14,28 @@ public class SavingsAccount extends Account {
             String pin,
             double balance) {
 
-        super(accountNumber, customer, pin, balance);
+        super(
+                accountNumber,
+                customer,
+                pin,
+                balance
+        );
     }
 
     @Override
     public boolean withdraw(double amount) {
 
-        if (!active || !InputValidator.isValidAmount(amount)) {
-            return false;
-        }
-
-        if (amount > balance) {
+        if (!active
+                || frozen
+                || !InputValidator.isValidAmount(amount)
+                || amount > balance) {
             return false;
         }
 
         balance -= amount;
 
         addTransaction(
-                "WITHDRAW",
+                "WITHDRAWAL",
                 amount,
                 "Cash withdrawn from savings account"
         );
@@ -40,18 +44,15 @@ public class SavingsAccount extends Account {
     }
 
     public double calculateInterest() {
-
-        return balance * INTEREST_RATE / 100;
+        return balance * INTEREST_RATE / 100.0;
     }
 
     public double getInterestRate() {
-
         return INTEREST_RATE;
     }
 
     @Override
     public String getAccountType() {
-
-        return "Savings Account";
+        return "SAVINGS";
     }
 }

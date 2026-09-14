@@ -69,37 +69,53 @@ public class Customer implements Serializable {
     }
 
     public List<Beneficiary> getBeneficiaries() {
+
+        initializeBeneficiaries();
+
         return beneficiaries;
     }
 
-    public boolean addBeneficiary(Beneficiary beneficiary) {
+    public boolean addBeneficiary(
+            Beneficiary beneficiary) {
 
-        if (beneficiary == null) {
+        if (beneficiary == null
+                || beneficiary.getAccountNumber() == null) {
             return false;
         }
 
-        for (Beneficiary existing : beneficiaries) {
+        initializeBeneficiaries();
 
-            if (existing.getAccountNumber()
-                    .equals(beneficiary.getAccountNumber())) {
-
-                return false;
-            }
+        if (findBeneficiary(
+                beneficiary.getAccountNumber()) != null) {
+            return false;
         }
 
         beneficiaries.add(beneficiary);
+
         return true;
     }
 
-    public boolean removeBeneficiary(String accountNumber) {
+    public boolean removeBeneficiary(
+            String accountNumber) {
 
-        for (int i = 0; i < beneficiaries.size(); i++) {
+        if (accountNumber == null) {
+            return false;
+        }
 
-            if (beneficiaries.get(i)
-                    .getAccountNumber()
-                    .equals(accountNumber)) {
+        initializeBeneficiaries();
+
+        for (int i = 0;
+             i < beneficiaries.size();
+             i++) {
+
+            Beneficiary beneficiary =
+                    beneficiaries.get(i);
+
+            if (accountNumber.equals(
+                    beneficiary.getAccountNumber())) {
 
                 beneficiaries.remove(i);
+
                 return true;
             }
         }
@@ -110,10 +126,17 @@ public class Customer implements Serializable {
     public Beneficiary findBeneficiary(
             String accountNumber) {
 
-        for (Beneficiary beneficiary : beneficiaries) {
+        if (accountNumber == null) {
+            return null;
+        }
 
-            if (beneficiary.getAccountNumber()
-                    .equals(accountNumber)) {
+        initializeBeneficiaries();
+
+        for (Beneficiary beneficiary :
+                beneficiaries) {
+
+            if (accountNumber.equals(
+                    beneficiary.getAccountNumber())) {
 
                 return beneficiary;
             }
@@ -123,6 +146,8 @@ public class Customer implements Serializable {
     }
 
     public void displayBeneficiaries() {
+
+        initializeBeneficiaries();
 
         System.out.println(
                 "\n========== SAVED BENEFICIARIES =========="
@@ -141,7 +166,8 @@ public class Customer implements Serializable {
                  i++) {
 
                 System.out.println(
-                        (i + 1) + ". "
+                        (i + 1)
+                                + ". "
                                 + beneficiaries.get(i)
                 );
             }
@@ -181,5 +207,12 @@ public class Customer implements Serializable {
         System.out.println(
                 "======================================"
         );
+    }
+
+    private void initializeBeneficiaries() {
+
+        if (beneficiaries == null) {
+            beneficiaries = new ArrayList<>();
+        }
     }
 }

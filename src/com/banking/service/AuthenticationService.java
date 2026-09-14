@@ -21,15 +21,54 @@ public class AuthenticationService {
         Account account =
                 bank.findAccount(accountNumber);
 
-        if (account == null
-                || !account.isActive()
-                || account.isFrozen()) {
+        if (account == null) {
+
+            logCustomerFailure(
+                    bank,
+                    accountNumber,
+                    "ACCOUNT NOT FOUND"
+            );
+
+            return null;
+        }
+
+        if (!account.isActive()) {
+
+            logCustomerFailure(
+                    bank,
+                    accountNumber,
+                    "ACCOUNT CLOSED"
+            );
+
+            return null;
+        }
+
+        if (account.isFrozen()) {
+
+            logCustomerFailure(
+                    bank,
+                    accountNumber,
+                    "ACCOUNT FROZEN"
+            );
+
             return null;
         }
 
         if (!account.verifyPin(pin)) {
+
+            logCustomerFailure(
+                    bank,
+                    accountNumber,
+                    "INVALID PIN"
+            );
+
             return null;
         }
+
+        logCustomerSuccess(
+                bank,
+                accountNumber
+        );
 
         return account;
     }
@@ -49,16 +88,42 @@ public class AuthenticationService {
                 bank.getAdmin();
 
         if (admin == null) {
+
+            logAdminFailure(
+                    bank,
+                    username,
+                    "ADMIN ACCOUNT UNAVAILABLE"
+            );
+
             return null;
         }
 
-        if (!admin.getUsername().equals(username)) {
+        if (!admin.isValidUsername(username)) {
+
+            logAdminFailure(
+                    bank,
+                    username,
+                    "INVALID USERNAME"
+            );
+
             return null;
         }
 
         if (!admin.verifyPassword(password)) {
+
+            logAdminFailure(
+                    bank,
+                    username,
+                    "INVALID PASSWORD"
+            );
+
             return null;
         }
+
+        logAdminSuccess(
+                bank,
+                username
+        );
 
         return admin;
     }
@@ -81,5 +146,67 @@ public class AuthenticationService {
                 MAX_LOGIN_ATTEMPTS - attemptsUsed;
 
         return Math.max(remaining, 0);
+    }
+
+    private void logCustomerSuccess(
+            Bank bank,
+            String accountNumber) {
+
+        if (bank != null
+                && bank.getAuditLogger() != null) {
+
+            bank.getAuditLogger().log(
+                    "CUSTOMER LOGIN SUCCESS | Account: "
+                            + accountNumber
+            );
+        }
+    }
+
+    private void logCustomerFailure(
+            Bank bank,
+            String accountNumber,
+            String reason) {
+
+        if (bank != null
+                && bank.getAuditLogger() != null) {
+
+            bank.getAuditLogger().log(
+                    "CUSTOMER LOGIN FAILED | Account: "
+                            + accountNumber
+                            + " | Reason: "
+                            + reason
+            );
+        }
+    }
+
+    private void logAdminSuccess(
+            Bank bank,
+            String username) {
+
+        if (bank != null
+                && bank.getAuditLogger() != null) {
+
+            bank.getAuditLogger().log(
+                    "ADMIN LOGIN SUCCESS | Username: "
+                            + username
+            );
+        }
+    }
+
+    private void logAdminFailure(
+            Bank bank,
+            String username,
+            String reason) {
+
+        if (bank != null
+                && bank.getAuditLogger() != null) {
+
+            bank.getAuditLogger().log(
+                    "ADMIN LOGIN FAILED | Username: "
+                            + username
+                            + " | Reason: "
+                            + reason
+            );
+        }
     }
 }
