@@ -211,10 +211,6 @@ The system provides reporting features including:
 
 Important system activities are recorded in:
 
-```text
-data/audit.log
-
-
 PROJECT REQUIREMENTS
 ====================
 
@@ -262,3 +258,51 @@ None.
 
 All application functionality is implemented using the
 standard Java library.
+
+## 📁 Project File Structure
+
+```text
+BankingManagementSystem/
+│
+├── src/
+│   └── com/
+│       └── banking/
+│           │
+│           ├── admin/
+│           │   └── Admin.java
+│           │
+│           ├── cli/
+│           │   └── Main.java
+│           │
+│           ├── model/
+│           │   ├── Account.java
+│           │   ├── SavingsAccount.java
+│           │   ├── CurrentAccount.java
+│           │   ├── Customer.java
+│           │   ├── Transaction.java
+│           │   └── Beneficiary.java
+│           │
+│           ├── service/
+│           │   ├── Bank.java
+│           │   ├── AuthenticationService.java
+│           │   ├── StatementService.java
+│           │   ├── ReportService.java
+│           │   └── AuditLogger.java
+│           │
+│           ├── validation/
+│           │   └── InputValidator.java
+│           │
+│           └── exception/
+│               └── BankingException.java
+│
+├── data/
+│   ├── accounts.dat
+│   └── audit.log
+│
+├── out/
+│
+├── build.bat
+├── build.sh
+├── README.md
+├── statement.md
+└── requirements.txt
