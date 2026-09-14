@@ -15,6 +15,7 @@ public abstract class Account implements Serializable {
     protected String pin;
     protected double balance;
     protected boolean active;
+    protected boolean frozen;
     protected List<Transaction> transactions;
 
     public Account(
@@ -28,6 +29,7 @@ public abstract class Account implements Serializable {
         this.pin = pin;
         this.balance = balance;
         this.active = true;
+        this.frozen = false;
         this.transactions = new ArrayList<>();
     }
 
@@ -47,11 +49,35 @@ public abstract class Account implements Serializable {
         return active;
     }
 
+    public boolean isFrozen() {
+        return frozen;
+    }
+
+    public String getStatus() {
+
+        if (!active) {
+            return "CLOSED";
+        }
+
+        if (frozen) {
+            return "FROZEN";
+        }
+
+        return "ACTIVE";
+    }
+
     public boolean verifyPin(String enteredPin) {
+
         return pin.equals(enteredPin);
     }
 
-    public boolean changePin(String oldPin, String newPin) {
+    public boolean changePin(
+            String oldPin,
+            String newPin) {
+
+        if (!active || frozen) {
+            return false;
+        }
 
         if (!verifyPin(oldPin)) {
             return false;
@@ -78,7 +104,9 @@ public abstract class Account implements Serializable {
 
     public boolean deposit(double amount) {
 
-        if (!active || !InputValidator.isValidAmount(amount)) {
+        if (!active
+                || frozen
+                || !InputValidator.isValidAmount(amount)) {
             return false;
         }
 
@@ -95,21 +123,27 @@ public abstract class Account implements Serializable {
 
     public boolean transferOut(double amount) {
 
-        if (!active || !InputValidator.isValidAmount(amount)) {
+        if (!active
+                || frozen
+                || !InputValidator.isValidAmount(amount)) {
             return false;
         }
 
         balance -= amount;
+
         return true;
     }
 
     public boolean transferIn(double amount) {
 
-        if (!active || !InputValidator.isValidAmount(amount)) {
+        if (!active
+                || frozen
+                || !InputValidator.isValidAmount(amount)) {
             return false;
         }
 
         balance += amount;
+
         return true;
     }
 
@@ -130,16 +164,52 @@ public abstract class Account implements Serializable {
     }
 
     public List<Transaction> getTransactions() {
+
         return transactions;
+    }
+
+    public boolean freezeAccount() {
+
+        if (!active || frozen) {
+            return false;
+        }
+
+        frozen = true;
+
+        addTransaction(
+                "ACCOUNT FROZEN",
+                0,
+                "Account frozen by administrator"
+        );
+
+        return true;
+    }
+
+    public boolean unfreezeAccount() {
+
+        if (!active || !frozen) {
+            return false;
+        }
+
+        frozen = false;
+
+        addTransaction(
+                "ACCOUNT UNFROZEN",
+                0,
+                "Account unfrozen by administrator"
+        );
+
+        return true;
     }
 
     public boolean closeAccount() {
 
-        if (!active || balance != 0) {
+        if (!active || frozen || balance != 0) {
             return false;
         }
 
         active = false;
+        frozen = false;
 
         addTransaction(
                 "ACCOUNT CLOSED",
@@ -154,7 +224,9 @@ public abstract class Account implements Serializable {
 
     public void displayDetails() {
 
-        System.out.println("\n========== ACCOUNT DETAILS ==========");
+        System.out.println(
+                "\n========== ACCOUNT DETAILS =========="
+        );
 
         System.out.println(
                 "Account Number : " + accountNumber
@@ -196,8 +268,7 @@ public abstract class Account implements Serializable {
         );
 
         System.out.println(
-                "Status         : "
-                        + (active ? "ACTIVE" : "CLOSED")
+                "Status         : " + getStatus()
         );
 
         System.out.println(

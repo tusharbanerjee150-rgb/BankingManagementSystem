@@ -3,6 +3,7 @@ package com.banking.service;
 import com.banking.admin.Admin;
 import com.banking.exception.BankingException;
 import com.banking.model.Account;
+import com.banking.model.Beneficiary;
 import com.banking.model.CurrentAccount;
 import com.banking.model.Customer;
 import com.banking.model.SavingsAccount;
@@ -15,10 +16,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Bank {
+
+    private static final double MAX_TRANSFER_AMOUNT = 50000.00;
+
+    private static final double DAILY_TRANSFER_LIMIT = 100000.00;
 
     private List<Account> accounts;
 
@@ -59,6 +65,7 @@ public class Bank {
                     name,
                     phone,
                     email,
+                    address,
                     pin,
                     accountType,
                     initialDeposit
@@ -138,6 +145,7 @@ public class Bank {
             String name,
             String phone,
             String email,
+            String address,
             String pin,
             String accountType,
             double initialDeposit)
@@ -164,6 +172,27 @@ public class Bank {
             );
         }
 
+        if (address == null || address.trim().isEmpty()) {
+
+            throw new BankingException(
+                    "Address cannot be empty."
+            );
+        }
+
+        if (isPhoneAlreadyRegistered(phone)) {
+
+            throw new BankingException(
+                    "Phone number is already registered."
+            );
+        }
+
+        if (isEmailAlreadyRegistered(email)) {
+
+            throw new BankingException(
+                    "Email address is already registered."
+            );
+        }
+
         if (!InputValidator.isValidPin(pin)) {
 
             throw new BankingException(
@@ -187,6 +216,32 @@ public class Bank {
                     "Invalid account type."
             );
         }
+    }
+
+    private boolean isPhoneAlreadyRegistered(String phone) {
+
+        for (Account account : accounts) {
+
+            if (account.getCustomer().getPhone()
+                    .equalsIgnoreCase(phone.trim())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isEmailAlreadyRegistered(String email) {
+
+        for (Account account : accounts) {
+
+            if (account.getCustomer().getEmail()
+                    .equalsIgnoreCase(email.trim())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private String generateAccountNumber() {
@@ -354,6 +409,13 @@ public class Bank {
             );
         }
 
+        if (amount > MAX_TRANSFER_AMOUNT) {
+
+            throw new BankingException(
+                    "Transfer amount cannot exceed 50000.00 per transaction."
+            );
+        }
+
         Account sender =
                 findAccount(senderNumber);
 
@@ -374,6 +436,18 @@ public class Bank {
             );
         }
 
+        double todayTransferTotal =
+                getTodayTransferTotal(sender);
+
+        if (todayTransferTotal + amount > DAILY_TRANSFER_LIMIT) {
+
+            throw new BankingException(
+                    "Daily transfer limit of 100000.00 exceeded. "
+                            + "Today's outgoing transfers: "
+                            + String.format("%.2f", todayTransferTotal)
+            );
+        }
+
         if (!sender.isActive()) {
 
             throw new BankingException(
@@ -385,6 +459,13 @@ public class Bank {
 
             throw new BankingException(
                     "Receiver account is closed."
+            );
+        }
+
+        if (receiver.isFrozen()) {
+
+            throw new BankingException(
+                    "Receiver account is frozen."
             );
         }
 
@@ -424,6 +505,183 @@ public class Bank {
         }
     }
 
+    private double getTodayTransferTotal(
+            Account account) {
+
+        double total = 0;
+        LocalDate today = LocalDate.now();
+
+        for (Transaction transaction :
+                account.getTransactions()) {
+
+            if ("TRANSFER SENT".equalsIgnoreCase(
+                    transaction.getType())
+                    && transaction.getTimestamp() != null
+                    && transaction.getTimestamp()
+                    .toLocalDate()
+                    .equals(today)) {
+
+                total += transaction.getAmount();
+            }
+        }
+
+        return total;
+    }
+
+    public boolean transferToBeneficiary(
+            String senderNumber,
+            String beneficiaryAccountNumber,
+            double amount) {
+
+        Account sender =
+                findAccount(senderNumber);
+
+        if (sender == null) {
+            System.out.println(
+                    "Transfer error: Sender account not found."
+            );
+            return false;
+        }
+
+        Beneficiary beneficiary =
+                sender.getCustomer()
+                        .findBeneficiary(
+                                beneficiaryAccountNumber
+                        );
+
+        if (beneficiary == null) {
+            System.out.println(
+                    "Transfer error: Beneficiary is not saved."
+            );
+            return false;
+        }
+
+        return transfer(
+                senderNumber,
+                beneficiary.getAccountNumber(),
+                amount
+        );
+    }
+
+    public boolean addBeneficiary(
+            String ownerAccountNumber,
+            String beneficiaryAccountNumber) {
+
+        Account owner =
+                findAccount(ownerAccountNumber);
+
+        if (owner == null) {
+            System.out.println(
+                    "Beneficiary error: Owner account not found."
+            );
+            return false;
+        }
+
+        if (!owner.isActive()) {
+            System.out.println(
+                    "Beneficiary error: Owner account is closed."
+            );
+            return false;
+        }
+
+        Account beneficiaryAccount =
+                findAccount(beneficiaryAccountNumber);
+
+        if (beneficiaryAccount == null) {
+            System.out.println(
+                    "Beneficiary error: Account not found."
+            );
+            return false;
+        }
+
+        if (!beneficiaryAccount.isActive()) {
+            System.out.println(
+                    "Beneficiary error: Beneficiary account is closed."
+            );
+            return false;
+        }
+
+        if (ownerAccountNumber.equals(
+                beneficiaryAccountNumber)) {
+
+            System.out.println(
+                    "Beneficiary error: You cannot add your own account."
+            );
+            return false;
+        }
+
+        Beneficiary beneficiary =
+                new Beneficiary(
+                        beneficiaryAccount.getAccountNumber(),
+                        beneficiaryAccount.getCustomer().getName(),
+                        beneficiaryAccount.getAccountType()
+                );
+
+        if (!owner.getCustomer()
+                .addBeneficiary(beneficiary)) {
+
+            System.out.println(
+                    "Beneficiary error: Beneficiary already exists."
+            );
+            return false;
+        }
+
+        saveAccounts();
+
+        return true;
+    }
+
+    public boolean removeBeneficiary(
+            String ownerAccountNumber,
+            String beneficiaryAccountNumber) {
+
+        Account owner =
+                findAccount(ownerAccountNumber);
+
+        if (owner == null) {
+            System.out.println(
+                    "Beneficiary error: Owner account not found."
+            );
+            return false;
+        }
+
+        if (!owner.isActive()) {
+            System.out.println(
+                    "Beneficiary error: Owner account is closed."
+            );
+            return false;
+        }
+
+        if (!owner.getCustomer()
+                .removeBeneficiary(
+                        beneficiaryAccountNumber
+                )) {
+
+            System.out.println(
+                    "Beneficiary error: Beneficiary not found."
+            );
+            return false;
+        }
+
+        saveAccounts();
+
+        return true;
+    }
+
+    public List<Beneficiary> getBeneficiaries(
+            String ownerAccountNumber) {
+
+        Account owner =
+                findAccount(ownerAccountNumber);
+
+        if (owner == null) {
+            return new ArrayList<>();
+        }
+
+        return owner.getCustomer()
+                .getBeneficiaries();
+    }
+
     public boolean verifyAdmin(
             String username,
             String password) {
@@ -451,8 +709,133 @@ public class Bank {
         return verified;
     }
 
+    public Admin getAdmin() {
+        return admin;
+    }
+
+    public AuditLogger getAuditLogger() {
+        return auditLogger;
+    }
+
     public List<Account> getAllAccounts() {
         return accounts;
+    }
+
+    public int getFrozenAccounts() {
+
+        int count = 0;
+
+        for (Account account : accounts) {
+            if (account.isFrozen()) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    public boolean freezeAccountByAdmin(
+            String accountNumber) {
+
+        try {
+
+            Account account =
+                    findAccount(accountNumber);
+
+            if (account == null) {
+                throw new BankingException(
+                        "Account not found."
+                );
+            }
+
+            if (!account.isActive()) {
+                throw new BankingException(
+                        "Closed account cannot be frozen."
+                );
+            }
+
+            if (account.isFrozen()) {
+                throw new BankingException(
+                        "Account is already frozen."
+                );
+            }
+
+            if (!account.freezeAccount()) {
+                throw new BankingException(
+                        "Unable to freeze account."
+                );
+            }
+
+            saveAccounts();
+
+            auditLogger.log(
+                    "ADMIN ACCOUNT FREEZE | Account: "
+                            + accountNumber
+            );
+
+            return true;
+
+        } catch (BankingException e) {
+
+            System.out.println(
+                    "Account freeze error: "
+                            + e.getMessage()
+            );
+
+            return false;
+        }
+    }
+
+    public boolean unfreezeAccountByAdmin(
+            String accountNumber) {
+
+        try {
+
+            Account account =
+                    findAccount(accountNumber);
+
+            if (account == null) {
+                throw new BankingException(
+                        "Account not found."
+                );
+            }
+
+            if (!account.isActive()) {
+                throw new BankingException(
+                        "Closed account cannot be unfrozen."
+                );
+            }
+
+            if (!account.isFrozen()) {
+                throw new BankingException(
+                        "Account is not frozen."
+                );
+            }
+
+            if (!account.unfreezeAccount()) {
+                throw new BankingException(
+                        "Unable to unfreeze account."
+                );
+            }
+
+            saveAccounts();
+
+            auditLogger.log(
+                    "ADMIN ACCOUNT UNFREEZE | Account: "
+                            + accountNumber
+            );
+
+            return true;
+
+        } catch (BankingException e) {
+
+            System.out.println(
+                    "Account unfreeze error: "
+                            + e.getMessage()
+            );
+
+            return false;
+        }
     }
 
     public int getTotalAccounts() {
@@ -529,6 +912,194 @@ public class Bank {
         return total;
     }
 
+    public int getTotalTransactions() {
+
+        int total = 0;
+
+        for (Account account : accounts) {
+            total += account.getTransactions().size();
+        }
+
+        return total;
+    }
+
+    public double getTotalDeposits() {
+
+        double total = 0;
+
+        for (Account account : accounts) {
+            for (Transaction transaction :
+                    account.getTransactions()) {
+
+                if ("DEPOSIT".equalsIgnoreCase(
+                        transaction.getType())) {
+                    total += transaction.getAmount();
+                }
+            }
+        }
+
+        return total;
+    }
+
+    public double getTotalWithdrawals() {
+
+        double total = 0;
+
+        for (Account account : accounts) {
+            for (Transaction transaction :
+                    account.getTransactions()) {
+
+                if ("WITHDRAW".equalsIgnoreCase(
+                        transaction.getType())) {
+                    total += transaction.getAmount();
+                }
+            }
+        }
+
+        return total;
+    }
+
+    public double getTotalTransfersSent() {
+
+        double total = 0;
+
+        for (Account account : accounts) {
+            for (Transaction transaction :
+                    account.getTransactions()) {
+
+                if ("TRANSFER SENT".equalsIgnoreCase(
+                        transaction.getType())) {
+                    total += transaction.getAmount();
+                }
+            }
+        }
+
+        return total;
+    }
+
+    public double getTotalTransfersReceived() {
+
+        double total = 0;
+
+        for (Account account : accounts) {
+            for (Transaction transaction :
+                    account.getTransactions()) {
+
+                if ("TRANSFER RECEIVED".equalsIgnoreCase(
+                        transaction.getType())) {
+                    total += transaction.getAmount();
+                }
+            }
+        }
+
+        return total;
+    }
+
+    public int getTotalBeneficiaries() {
+
+        int total = 0;
+
+        for (Account account : accounts) {
+            if (account.getCustomer() != null
+                    && account.getCustomer()
+                    .getBeneficiaries() != null) {
+
+                total += account.getCustomer()
+                        .getBeneficiaries()
+                        .size();
+            }
+        }
+
+        return total;
+    }
+
+    public void displayAdminDashboard() {
+
+        System.out.println(
+                "\n=============================================="
+        );
+        System.out.println(
+                "              ADMIN DASHBOARD"
+        );
+        System.out.println(
+                "=============================================="
+        );
+
+        System.out.println(
+                "ACCOUNT OVERVIEW"
+        );
+        System.out.println(
+                "----------------------------------------------"
+        );
+        System.out.println(
+                "Total Accounts       : " + getTotalAccounts()
+        );
+        System.out.println(
+                "Active Accounts      : " + getActiveAccounts()
+        );
+        System.out.println(
+                "Frozen Accounts      : " + getFrozenAccounts()
+        );
+        System.out.println(
+                "Closed Accounts      : " + getClosedAccounts()
+        );
+        System.out.println(
+                "Savings Accounts     : " + getSavingsAccounts()
+        );
+        System.out.println(
+                "Current Accounts     : " + getCurrentAccounts()
+        );
+
+        System.out.printf(
+                "Total Bank Balance   : %.2f%n",
+                getTotalBankBalance()
+        );
+
+        System.out.println(
+                "\nTRANSACTION OVERVIEW"
+        );
+        System.out.println(
+                "----------------------------------------------"
+        );
+        System.out.println(
+                "Total Transactions    : " + getTotalTransactions()
+        );
+
+        System.out.printf(
+                "Total Deposits       : %.2f%n",
+                getTotalDeposits()
+        );
+
+        System.out.printf(
+                "Total Withdrawals    : %.2f%n",
+                getTotalWithdrawals()
+        );
+
+        System.out.printf(
+                "Transfers Sent       : %.2f%n",
+                getTotalTransfersSent()
+        );
+
+        System.out.printf(
+                "Transfers Received   : %.2f%n",
+                getTotalTransfersReceived()
+        );
+
+        System.out.println(
+                "\nOTHER INFORMATION"
+        );
+        System.out.println(
+                "----------------------------------------------"
+        );
+        System.out.println(
+                "Saved Beneficiaries  : " + getTotalBeneficiaries()
+        );
+
+        System.out.println(
+                "=============================================="
+        );
+    }
+
     public void displayAllAccounts() {
 
         if (accounts.isEmpty()) {
@@ -569,9 +1140,7 @@ public class Bank {
 
             System.out.println(
                     "Status         : "
-                            + (account.isActive()
-                            ? "ACTIVE"
-                            : "CLOSED")
+                            + account.getStatus()
             );
 
             System.out.println(

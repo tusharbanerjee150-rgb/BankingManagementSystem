@@ -8,13 +8,13 @@ public class Transaction implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static int transactionCounter = 1000;
+    private static long transactionCounter = 1000;
 
     private String transactionId;
     private String type;
     private double amount;
     private String description;
-    private LocalDateTime dateTime;
+    private LocalDateTime timestamp;
 
     public Transaction(
             String type,
@@ -24,15 +24,12 @@ public class Transaction implements Serializable {
         transactionCounter++;
 
         this.transactionId =
-                String.format(
-                        "TXN%04d",
-                        transactionCounter
-                );
+                "TXN" + transactionCounter;
 
         this.type = type;
         this.amount = amount;
         this.description = description;
-        this.dateTime = LocalDateTime.now();
+        this.timestamp = LocalDateTime.now();
     }
 
     public String getTransactionId() {
@@ -51,23 +48,20 @@ public class Transaction implements Serializable {
         return description;
     }
 
-    public LocalDateTime getDateTime() {
-        return dateTime;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
-    public static void initializeCounter(
-            int highestTransactionId) {
-
-        if (highestTransactionId >
-                transactionCounter) {
-
-            transactionCounter =
-                    highestTransactionId;
-        }
-    }
-
-    public static int getCounter() {
+    public static long getTransactionCounter() {
         return transactionCounter;
+    }
+
+    public static void setTransactionCounter(long counter) {
+        transactionCounter = counter;
+    }
+
+    public static void initializeCounter(long counter) {
+        transactionCounter = counter;
     }
 
     @Override
@@ -75,16 +69,16 @@ public class Transaction implements Serializable {
 
         DateTimeFormatter formatter =
                 DateTimeFormatter.ofPattern(
-                        "dd-MM-yyyy HH:mm"
+                        "yyyy-MM-dd HH:mm:ss"
                 );
 
         return String.format(
-                "%s | %-16s | Amount: %.2f | %s | %s",
+                "Transaction ID: %s | Type: %s | Amount: %.2f | Description: %s | Date: %s",
                 transactionId,
                 type,
                 amount,
                 description,
-                dateTime.format(formatter)
+                timestamp.format(formatter)
         );
     }
 }

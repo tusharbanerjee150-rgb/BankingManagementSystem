@@ -1,6 +1,7 @@
 package com.banking.cli;
 
 import com.banking.model.Account;
+import com.banking.model.Beneficiary;
 import com.banking.model.CurrentAccount;
 import com.banking.model.SavingsAccount;
 import com.banking.service.Bank;
@@ -413,7 +414,11 @@ public class Main {
             );
 
             System.out.println(
-                    "11. Logout"
+                    "11. Manage Beneficiaries"
+            );
+
+            System.out.println(
+                    "12. Logout"
             );
 
             int choice =
@@ -464,6 +469,10 @@ public class Main {
                     break;
 
                 case 11:
+                    manageBeneficiaries(account);
+                    break;
+
+                case 12:
                     loggedIn = false;
 
                     System.out.println(
@@ -1057,6 +1066,164 @@ public class Main {
 
             System.out.println(
                     "Incorrect current PIN or invalid new PIN."
+            );
+        }
+    }
+
+    private static void manageBeneficiaries(
+            Account account) {
+
+        boolean managing = true;
+
+        while (managing) {
+
+            System.out.println(
+                    "\n========== MANAGE BENEFICIARIES =========="
+            );
+
+            System.out.println(
+                    "1. Add Beneficiary"
+            );
+
+            System.out.println(
+                    "2. View Beneficiaries"
+            );
+
+            System.out.println(
+                    "3. Remove Beneficiary"
+            );
+
+            System.out.println(
+                    "4. Back"
+            );
+
+            int choice =
+                    readInt("Enter your choice: ");
+
+            switch (choice) {
+
+                case 1:
+                    addBeneficiary(account);
+                    break;
+
+                case 2:
+                    account.getCustomer()
+                            .displayBeneficiaries();
+                    break;
+
+                case 3:
+                    removeBeneficiary(account);
+                    break;
+
+                case 4:
+                    managing = false;
+                    break;
+
+                default:
+                    System.out.println(
+                            "Invalid choice."
+                    );
+            }
+        }
+    }
+
+    private static void addBeneficiary(
+            Account account) {
+
+        System.out.print(
+                "Enter beneficiary account number: "
+        );
+
+        String accountNumber =
+                scanner.nextLine().trim();
+
+        if (accountNumber.isEmpty()) {
+            System.out.println(
+                    "Account number cannot be empty."
+            );
+            return;
+        }
+
+        if (account.getAccountNumber()
+                .equalsIgnoreCase(accountNumber)) {
+
+            System.out.println(
+                    "You cannot add your own account as a beneficiary."
+            );
+            return;
+        }
+
+        Account beneficiaryAccount =
+                bank.findAccount(accountNumber);
+
+        if (beneficiaryAccount == null) {
+            System.out.println(
+                    "Beneficiary account not found."
+            );
+            return;
+        }
+
+        if (!beneficiaryAccount.isActive()) {
+            System.out.println(
+                    "Cannot add a closed account as a beneficiary."
+            );
+            return;
+        }
+
+        Beneficiary beneficiary =
+                new Beneficiary(
+                        beneficiaryAccount.getAccountNumber(),
+                        beneficiaryAccount.getCustomer().getName(),
+                        beneficiaryAccount.getAccountType()
+                );
+
+        if (account.getCustomer()
+                .addBeneficiary(beneficiary)) {
+
+            bank.saveAccounts();
+
+            System.out.println(
+                    "Beneficiary added successfully."
+            );
+
+        } else {
+
+            System.out.println(
+                    "Beneficiary already exists."
+            );
+        }
+    }
+
+    private static void removeBeneficiary(
+            Account account) {
+
+        System.out.print(
+                "Enter beneficiary account number to remove: "
+        );
+
+        String accountNumber =
+                scanner.nextLine().trim();
+
+        if (accountNumber.isEmpty()) {
+            System.out.println(
+                    "Account number cannot be empty."
+            );
+            return;
+        }
+
+        if (account.getCustomer()
+                .removeBeneficiary(accountNumber)) {
+
+            bank.saveAccounts();
+
+            System.out.println(
+                    "Beneficiary removed successfully."
+            );
+
+        } else {
+
+            System.out.println(
+                    "Beneficiary not found."
             );
         }
     }

@@ -1,43 +1,114 @@
 package com.banking.validation;
 
-import java.util.regex.Pattern;
-
-public class InputValidator {
+public final class InputValidator {
 
     private InputValidator() {
-        // Prevent object creation
     }
 
     public static boolean isValidName(String name) {
 
-        return name != null
-                && !name.trim().isEmpty()
-                && name.matches("[a-zA-Z ]+");
+        if (name == null) {
+            return false;
+        }
+
+        String value = name.trim();
+
+        return !value.isEmpty()
+                && value.length() <= 100
+                && value.matches("[A-Za-z ]+");
     }
 
     public static boolean isValidPhone(String phone) {
 
-        return phone != null
-                && phone.matches("\\d{10}");
+        if (phone == null) {
+            return false;
+        }
+
+        return phone.matches("[6-9][0-9]{9}");
     }
 
     public static boolean isValidEmail(String email) {
 
-        String emailPattern =
-                "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        if (email == null) {
+            return false;
+        }
 
-        return email != null
-                && Pattern.matches(emailPattern, email);
+        String value = email.trim();
+
+        return value.length() <= 150
+                && value.matches(
+                "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        );
     }
 
     public static boolean isValidPin(String pin) {
 
         return pin != null
-                && pin.matches("\\d{4}");
+                && pin.matches("[0-9]{4}");
     }
 
     public static boolean isValidAmount(double amount) {
 
-        return amount > 0;
+        return !Double.isNaN(amount)
+                && !Double.isInfinite(amount)
+                && amount > 0;
+    }
+
+    public static boolean isValidAccountNumber(
+            String accountNumber) {
+
+        if (accountNumber == null) {
+            return false;
+        }
+
+        return accountNumber.matches("[A-Za-z0-9]{6,20}");
+    }
+
+    public static boolean isValidCustomerId(
+            String customerId) {
+
+        if (customerId == null) {
+            return false;
+        }
+
+        return customerId.matches("[A-Za-z0-9]{4,20}");
+    }
+
+    public static boolean isValidAddress(
+            String address) {
+
+        if (address == null) {
+            return false;
+        }
+
+        String value = address.trim();
+
+        return !value.isEmpty()
+                && value.length() <= 250;
+    }
+
+    public static boolean isValidAccountType(
+            String accountType) {
+
+        if (accountType == null) {
+            return false;
+        }
+
+        return accountType.equalsIgnoreCase("savings")
+                || accountType.equalsIgnoreCase("current");
+    }
+
+    public static boolean isValidUsername(
+            String username) {
+
+        if (username == null) {
+            return false;
+        }
+
+        String value = username.trim();
+
+        return !value.isEmpty()
+                && value.length() <= 50
+                && value.matches("[A-Za-z0-9._-]+");
     }
 }
