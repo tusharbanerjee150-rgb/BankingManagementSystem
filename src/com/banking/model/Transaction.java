@@ -16,11 +16,19 @@ public class Transaction implements Serializable {
     private String description;
     private LocalDateTime dateTime;
 
-    public Transaction(String type, double amount, String description) {
+    public Transaction(
+            String type,
+            double amount,
+            String description) {
 
         transactionCounter++;
 
-        this.transactionId = String.format("TXN%04d", transactionCounter);
+        this.transactionId =
+                String.format(
+                        "TXN%04d",
+                        transactionCounter
+                );
+
         this.type = type;
         this.amount = amount;
         this.description = description;
@@ -31,10 +39,30 @@ public class Transaction implements Serializable {
         return transactionId;
     }
 
-    public static void initializeCounter(int highestTransactionId) {
+    public String getType() {
+        return type;
+    }
 
-        if (highestTransactionId > transactionCounter) {
-            transactionCounter = highestTransactionId;
+    public double getAmount() {
+        return amount;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public static void initializeCounter(
+            int highestTransactionId) {
+
+        if (highestTransactionId >
+                transactionCounter) {
+
+            transactionCounter =
+                    highestTransactionId;
         }
     }
 
@@ -46,7 +74,9 @@ public class Transaction implements Serializable {
     public String toString() {
 
         DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+                DateTimeFormatter.ofPattern(
+                        "dd-MM-yyyy HH:mm"
+                );
 
         return String.format(
                 "%s | %-16s | Amount: %.2f | %s | %s",

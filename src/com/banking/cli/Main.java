@@ -4,6 +4,7 @@ import com.banking.model.Account;
 import com.banking.model.CurrentAccount;
 import com.banking.model.SavingsAccount;
 import com.banking.service.Bank;
+import com.banking.service.StatementService;
 import com.banking.validation.InputValidator;
 
 import java.util.List;
@@ -16,6 +17,9 @@ public class Main {
 
     private static final Bank bank =
             new Bank();
+
+    private static final StatementService statementService =
+            new StatementService();
 
     public static void main(String[] args) {
 
@@ -45,10 +49,12 @@ public class Main {
 
                 case 4:
                     running = false;
+
                     System.out.println(
                             "\nThank you for using "
                                     + "Banking Management System."
                     );
+
                     break;
 
                 default:
@@ -61,37 +67,40 @@ public class Main {
         scanner.close();
     }
 
-    // ==================== MAIN MENU ====================
-
     private static void displayMainMenu() {
 
         System.out.println(
                 "\n======================================"
         );
+
         System.out.println(
                 "       BANKING MANAGEMENT SYSTEM"
         );
+
         System.out.println(
                 "======================================"
         );
+
         System.out.println(
                 "1. Create Account"
         );
+
         System.out.println(
                 "2. Customer Login"
         );
+
         System.out.println(
                 "3. Admin Login"
         );
+
         System.out.println(
                 "4. Exit"
         );
+
         System.out.println(
                 "======================================"
         );
     }
-
-    // ==================== CREATE ACCOUNT ====================
 
     private static void createAccount() {
 
@@ -107,7 +116,8 @@ public class Main {
                     "Enter name: "
             );
 
-            name = scanner.nextLine().trim();
+            name =
+                    scanner.nextLine().trim();
 
             if (InputValidator.isValidName(name)) {
                 break;
@@ -126,7 +136,8 @@ public class Main {
                     "Enter 10-digit phone number: "
             );
 
-            phone = scanner.nextLine().trim();
+            phone =
+                    scanner.nextLine().trim();
 
             if (InputValidator.isValidPhone(phone)) {
                 break;
@@ -145,7 +156,8 @@ public class Main {
                     "Enter email: "
             );
 
-            email = scanner.nextLine().trim();
+            email =
+                    scanner.nextLine().trim();
 
             if (InputValidator.isValidEmail(email)) {
                 break;
@@ -171,7 +183,8 @@ public class Main {
                     "Create 4-digit PIN: "
             );
 
-            pin = scanner.nextLine().trim();
+            pin =
+                    scanner.nextLine().trim();
 
             if (InputValidator.isValidPin(pin)) {
                 break;
@@ -277,8 +290,6 @@ public class Main {
         }
     }
 
-    // ==================== CUSTOMER LOGIN ====================
-
     private static void customerLogin() {
 
         System.out.println(
@@ -350,8 +361,6 @@ public class Main {
         );
     }
 
-    // ==================== CUSTOMER MENU ====================
-
     private static void customerMenu(
             Account account) {
 
@@ -384,23 +393,27 @@ public class Main {
             );
 
             System.out.println(
-                    "6. Account Details"
+                    "6. Account Statement"
             );
 
             System.out.println(
-                    "7. Calculate Interest"
+                    "7. Account Details"
             );
 
             System.out.println(
-                    "8. Close Account"
+                    "8. Calculate Interest"
             );
 
             System.out.println(
-                    "9. Manage Profile"
+                    "9. Close Account"
             );
 
             System.out.println(
-                    "10. Logout"
+                    "10. Manage Profile"
+            );
+
+            System.out.println(
+                    "11. Logout"
             );
 
             int choice =
@@ -429,26 +442,34 @@ public class Main {
                     break;
 
                 case 6:
-                    account.displayDetails();
+                    statementService.generateStatement(
+                            account
+                    );
                     break;
 
                 case 7:
-                    calculateInterest(account);
+                    account.displayDetails();
                     break;
 
                 case 8:
-                    closeCustomerAccount(account);
+                    calculateInterest(account);
                     break;
 
                 case 9:
-                    manageProfile(account);
+                    closeCustomerAccount(account);
                     break;
 
                 case 10:
+                    manageProfile(account);
+                    break;
+
+                case 11:
                     loggedIn = false;
+
                     System.out.println(
                             "Logged out successfully."
                     );
+
                     break;
 
                 default:
@@ -458,8 +479,6 @@ public class Main {
             }
         }
     }
-
-    // ==================== DEPOSIT ====================
 
     private static void deposit(Account account) {
 
@@ -493,8 +512,6 @@ public class Main {
             );
         }
     }
-
-    // ==================== WITHDRAW ====================
 
     private static void withdraw(Account account) {
 
@@ -559,8 +576,6 @@ public class Main {
         }
     }
 
-    // ==================== TRANSFER ====================
-
     private static void transfer(Account account) {
 
         System.out.print(
@@ -606,17 +621,14 @@ public class Main {
         }
     }
 
-    // ==================== BALANCE ====================
-
-    private static void checkBalance(Account account) {
+    private static void checkBalance(
+            Account account) {
 
         System.out.printf(
                 "\nCurrent Balance: %.2f%n",
                 account.getBalance()
         );
     }
-
-    // ==================== TRANSACTIONS ====================
 
     private static void displayTransactions(
             Account account) {
@@ -645,8 +657,6 @@ public class Main {
         );
     }
 
-    // ==================== INTEREST ====================
-
     private static void calculateInterest(
             Account account) {
 
@@ -672,8 +682,6 @@ public class Main {
             );
         }
     }
-
-    // ==================== CLOSE ACCOUNT ====================
 
     private static void closeCustomerAccount(
             Account account) {
@@ -724,8 +732,6 @@ public class Main {
             );
         }
     }
-
-    // ==================== PROFILE MANAGEMENT ====================
 
     private static void manageProfile(
             Account account) {
@@ -973,8 +979,6 @@ public class Main {
         }
     }
 
-    // ==================== ADMIN LOGIN ====================
-
     private static void adminLogin() {
 
         System.out.println(
@@ -1012,8 +1016,6 @@ public class Main {
             );
         }
     }
-
-    // ==================== ADMIN MENU ====================
 
     private static void adminMenu() {
 
@@ -1143,8 +1145,6 @@ public class Main {
         }
     }
 
-    // ==================== ADMIN SEARCH ====================
-
     private static void adminSearchAccount() {
 
         System.out.print(
@@ -1200,8 +1200,6 @@ public class Main {
         }
     }
 
-    // ==================== ADMIN DETAILS ====================
-
     private static void adminViewAccountDetails() {
 
         System.out.print(
@@ -1226,8 +1224,6 @@ public class Main {
         account.displayDetails();
     }
 
-    // ==================== ADMIN TRANSACTIONS ====================
-
     private static void adminViewTransactions() {
 
         System.out.print(
@@ -1241,8 +1237,6 @@ public class Main {
                 accountNumber
         );
     }
-
-    // ==================== ADMIN CLOSE ACCOUNT ====================
 
     private static void adminCloseAccount() {
 
@@ -1306,8 +1300,6 @@ public class Main {
         }
     }
 
-    // ==================== BANK STATISTICS ====================
-
     private static void displayBankStatistics() {
 
         System.out.println(
@@ -1348,8 +1340,6 @@ public class Main {
                 "====================================="
         );
     }
-
-    // ==================== INPUT METHODS ====================
 
     private static int readInt(String message) {
 
