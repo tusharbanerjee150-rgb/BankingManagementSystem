@@ -62,7 +62,17 @@ public abstract class Account implements Serializable {
             return false;
         }
 
+        if (oldPin.equals(newPin)) {
+            return false;
+        }
+
         pin = newPin;
+
+        addTransaction(
+                "PIN CHANGE",
+                0,
+                "Account PIN changed successfully"
+        );
 
         return true;
     }
