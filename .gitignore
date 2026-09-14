@@ -3,6 +3,7 @@ out/
 
 # Banking data
 data/accounts.dat
+data/audit.log
 
 # IDE files
 .vscode/
