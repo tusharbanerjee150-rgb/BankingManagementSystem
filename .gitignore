@@ -1,0 +1,12 @@
+# Compiled Java files
+out/
+
+# Banking data
+data/accounts.dat
+
+# IDE files
+.vscode/
+.idea/
+
+# Java build artifacts
+*.class
