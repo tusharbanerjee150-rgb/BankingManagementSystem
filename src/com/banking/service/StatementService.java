@@ -37,7 +37,7 @@ public class StatementService {
 
                 totalWithdrawn += amount;
 
-            } else if ("TRANSFER".equalsIgnoreCase(type)) {
+            } else if ("TRANSFER SENT".equalsIgnoreCase(type)) {
 
                 totalTransferred += amount;
             }
@@ -138,6 +138,64 @@ public class StatementService {
 
         System.out.println(
                 "=========================================="
+        );
+    }
+
+    public void filterTransactions(
+            Account account,
+            String transactionType) {
+
+        if (account == null) {
+
+            System.out.println(
+                    "\nUnable to display transactions."
+            );
+
+            return;
+        }
+
+        System.out.println(
+                "\n========== FILTERED TRANSACTIONS =========="
+        );
+
+        System.out.println(
+                "Account Number : "
+                        + account.getAccountNumber()
+        );
+
+        System.out.println(
+                "Filter         : "
+                        + transactionType
+        );
+
+        System.out.println(
+                "-------------------------------------------"
+        );
+
+        boolean found = false;
+
+        for (Transaction transaction :
+                account.getTransactions()) {
+
+            if (transactionType.equalsIgnoreCase("ALL")
+                    || transaction.getType()
+                    .equalsIgnoreCase(transactionType)) {
+
+                System.out.println(transaction);
+
+                found = true;
+            }
+        }
+
+        if (!found) {
+
+            System.out.println(
+                    "No matching transactions found."
+            );
+        }
+
+        System.out.println(
+                "==========================================="
         );
     }
 }

@@ -438,7 +438,7 @@ public class Main {
                     break;
 
                 case 5:
-                    displayTransactions(account);
+                    transactionHistoryMenu(account);
                     break;
 
                 case 6:
@@ -630,31 +630,113 @@ public class Main {
         );
     }
 
-    private static void displayTransactions(
+    private static void transactionHistoryMenu(
             Account account) {
 
-        System.out.println(
-                "\n========== TRANSACTION HISTORY =========="
-        );
+        boolean viewing = true;
 
-        if (account.getTransactions().isEmpty()) {
+        while (viewing) {
 
             System.out.println(
-                    "No transactions found."
+                    "\n========== TRANSACTION HISTORY =========="
             );
 
-        } else {
+            System.out.println(
+                    "1. All Transactions"
+            );
 
-            for (var transaction :
-                    account.getTransactions()) {
+            System.out.println(
+                    "2. Deposits"
+            );
 
-                System.out.println(transaction);
+            System.out.println(
+                    "3. Withdrawals"
+            );
+
+            System.out.println(
+                    "4. Transfers Sent"
+            );
+
+            System.out.println(
+                    "5. Transfers Received"
+            );
+
+            System.out.println(
+                    "6. Account Opening"
+            );
+
+            System.out.println(
+                    "7. PIN Changes"
+            );
+
+            System.out.println(
+                    "8. Back"
+            );
+
+            int choice =
+                    readInt("Enter your choice: ");
+
+            switch (choice) {
+
+                case 1:
+                    statementService.filterTransactions(
+                            account,
+                            "ALL"
+                    );
+                    break;
+
+                case 2:
+                    statementService.filterTransactions(
+                            account,
+                            "DEPOSIT"
+                    );
+                    break;
+
+                case 3:
+                    statementService.filterTransactions(
+                            account,
+                            "WITHDRAW"
+                    );
+                    break;
+
+                case 4:
+                    statementService.filterTransactions(
+                            account,
+                            "TRANSFER SENT"
+                    );
+                    break;
+
+                case 5:
+                    statementService.filterTransactions(
+                            account,
+                            "TRANSFER RECEIVED"
+                    );
+                    break;
+
+                case 6:
+                    statementService.filterTransactions(
+                            account,
+                            "OPENING"
+                    );
+                    break;
+
+                case 7:
+                    statementService.filterTransactions(
+                            account,
+                            "PIN CHANGE"
+                    );
+                    break;
+
+                case 8:
+                    viewing = false;
+                    break;
+
+                default:
+                    System.out.println(
+                            "Invalid choice."
+                    );
             }
         }
-
-        System.out.println(
-                "========================================="
-        );
     }
 
     private static void calculateInterest(
