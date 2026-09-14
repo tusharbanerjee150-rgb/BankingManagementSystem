@@ -1,4 +1,4 @@
-package com.banking.model;
+package com.banking.admin;
 
 import java.io.Serializable;
 

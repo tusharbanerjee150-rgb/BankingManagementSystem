@@ -1067,36 +1067,51 @@ public class Main {
                 "\n========== ADMIN LOGIN =========="
         );
 
-        System.out.print(
-                "Username: "
-        );
+        int attempts = 3;
 
-        String username =
-                scanner.nextLine().trim();
+        while (attempts > 0) {
 
-        System.out.print(
-                "Password: "
-        );
-
-        String password =
-                scanner.nextLine();
-
-        if (bank.verifyAdmin(
-                username,
-                password)) {
-
-            System.out.println(
-                    "\nAdmin login successful."
+            System.out.print(
+                    "Username: "
             );
 
-            adminMenu();
+            String username =
+                    scanner.nextLine().trim();
 
-        } else {
-
-            System.out.println(
-                    "Invalid admin credentials."
+            System.out.print(
+                    "Password: "
             );
+
+            String password =
+                    scanner.nextLine();
+
+            if (bank.verifyAdmin(
+                    username,
+                    password)) {
+
+                System.out.println(
+                        "\nAdmin login successful."
+                );
+
+                adminMenu();
+                return;
+
+            }
+
+            attempts--;
+
+            if (attempts > 0) {
+                System.out.println(
+                        "Invalid admin credentials. "
+                                + "Attempts remaining: "
+                                + attempts
+                );
+            }
         }
+
+        System.out.println(
+                "Maximum admin login attempts reached."
+        );
     }
 
     private static void adminMenu() {

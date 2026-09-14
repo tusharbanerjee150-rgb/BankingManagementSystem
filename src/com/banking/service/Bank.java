@@ -1,7 +1,8 @@
 package com.banking.service;
 
+import com.banking.admin.Admin;
+import com.banking.exception.BankingException;
 import com.banking.model.Account;
-import com.banking.model.Admin;
 import com.banking.model.CurrentAccount;
 import com.banking.model.Customer;
 import com.banking.model.SavingsAccount;
@@ -21,9 +22,12 @@ public class Bank {
 
     private List<Account> accounts;
 
-    private static final String DATA_FILE = "data/accounts.dat";
+    private static final String DATA_FILE =
+            "data/accounts.dat";
 
     private Admin admin;
+
+    private AuditLogger auditLogger;
 
     public Bank() {
 
@@ -33,6 +37,8 @@ public class Bank {
                 "admin",
                 "admin123"
         );
+
+        auditLogger = new AuditLogger();
 
         loadAccounts();
         initializeTransactionCounter();
@@ -47,64 +53,140 @@ public class Bank {
             String accountType,
             double initialDeposit) {
 
-        if (!InputValidator.isValidName(name)
-                || !InputValidator.isValidPhone(phone)
-                || !InputValidator.isValidEmail(email)
-                || !InputValidator.isValidPin(pin)
-                || !InputValidator.isValidAmount(initialDeposit)) {
+        try {
 
-            return null;
-        }
-
-        if (!accountType.equalsIgnoreCase("savings")
-                && !accountType.equalsIgnoreCase("current")) {
-
-            return null;
-        }
-
-        String customerId = generateCustomerId();
-        String accountNumber = generateAccountNumber();
-
-        Customer customer = new Customer(
-                customerId,
-                name,
-                phone,
-                email,
-                address
-        );
-
-        Account account;
-
-        if (accountType.equalsIgnoreCase("savings")) {
-
-            account = new SavingsAccount(
-                    accountNumber,
-                    customer,
+            validateAccountCreation(
+                    name,
+                    phone,
+                    email,
                     pin,
+                    accountType,
                     initialDeposit
             );
 
-        } else {
+            String customerId =
+                    generateCustomerId();
 
-            account = new CurrentAccount(
-                    accountNumber,
-                    customer,
-                    pin,
-                    initialDeposit
+            String accountNumber =
+                    generateAccountNumber();
+
+            Customer customer =
+                    new Customer(
+                            customerId,
+                            name,
+                            phone,
+                            email,
+                            address
+                    );
+
+            Account account;
+
+            if (accountType.equalsIgnoreCase("savings")) {
+
+                account =
+                        new SavingsAccount(
+                                accountNumber,
+                                customer,
+                                pin,
+                                initialDeposit
+                        );
+
+            } else {
+
+                account =
+                        new CurrentAccount(
+                                accountNumber,
+                                customer,
+                                pin,
+                                initialDeposit
+                        );
+            }
+
+            account.addTransaction(
+                    "OPENING",
+                    initialDeposit,
+                    "Account opened with initial deposit"
+            );
+
+            accounts.add(account);
+
+            saveAccounts();
+
+            auditLogger.log(
+                    "ACCOUNT CREATED | Account: "
+                            + accountNumber
+                            + " | Customer: "
+                            + customerId
+                            + " | Type: "
+                            + account.getAccountType()
+            );
+
+            return account;
+
+        } catch (BankingException e) {
+
+            System.out.println(
+                    "Account creation error: "
+                            + e.getMessage()
+            );
+
+            return null;
+        }
+    }
+
+    private void validateAccountCreation(
+            String name,
+            String phone,
+            String email,
+            String pin,
+            String accountType,
+            double initialDeposit)
+            throws BankingException {
+
+        if (!InputValidator.isValidName(name)) {
+
+            throw new BankingException(
+                    "Invalid customer name."
             );
         }
 
-        account.addTransaction(
-                "OPENING",
-                initialDeposit,
-                "Account opened with initial deposit"
-        );
+        if (!InputValidator.isValidPhone(phone)) {
 
-        accounts.add(account);
+            throw new BankingException(
+                    "Invalid phone number."
+            );
+        }
 
-        saveAccounts();
+        if (!InputValidator.isValidEmail(email)) {
 
-        return account;
+            throw new BankingException(
+                    "Invalid email address."
+            );
+        }
+
+        if (!InputValidator.isValidPin(pin)) {
+
+            throw new BankingException(
+                    "PIN must contain exactly 4 digits."
+            );
+        }
+
+        if (!InputValidator.isValidAmount(
+                initialDeposit)) {
+
+            throw new BankingException(
+                    "Initial deposit must be greater than 0."
+            );
+        }
+
+        if (accountType == null
+                || (!accountType.equalsIgnoreCase("savings")
+                && !accountType.equalsIgnoreCase("current"))) {
+
+            throw new BankingException(
+                    "Invalid account type."
+            );
+        }
     }
 
     private String generateAccountNumber() {
@@ -115,9 +197,10 @@ public class Bank {
 
             try {
 
-                long number = Long.parseLong(
-                        account.getAccountNumber()
-                );
+                long number =
+                        Long.parseLong(
+                                account.getAccountNumber()
+                        );
 
                 if (number > highestNumber) {
                     highestNumber = number;
@@ -127,7 +210,9 @@ public class Bank {
             }
         }
 
-        return String.valueOf(highestNumber + 1);
+        return String.valueOf(
+                highestNumber + 1
+        );
     }
 
     private String generateCustomerId() {
@@ -137,16 +222,18 @@ public class Bank {
         for (Account account : accounts) {
 
             String customerId =
-                    account.getCustomer().getCustomerId();
+                    account.getCustomer()
+                            .getCustomerId();
 
             if (customerId != null
                     && customerId.startsWith("C")) {
 
                 try {
 
-                    int number = Integer.parseInt(
-                            customerId.substring(1)
-                    );
+                    int number =
+                            Integer.parseInt(
+                                    customerId.substring(1)
+                            );
 
                     if (number > highestNumber) {
                         highestNumber = number;
@@ -163,7 +250,8 @@ public class Bank {
         );
     }
 
-    public Account findAccount(String accountNumber) {
+    public Account findAccount(
+            String accountNumber) {
 
         for (Account account : accounts) {
 
@@ -182,40 +270,142 @@ public class Bank {
             String receiverNumber,
             double amount) {
 
+        try {
+
+            validateTransfer(
+                    senderNumber,
+                    receiverNumber,
+                    amount
+            );
+
+            Account sender =
+                    findAccount(senderNumber);
+
+            Account receiver =
+                    findAccount(receiverNumber);
+
+            if (!sender.transferOut(amount)) {
+
+                throw new BankingException(
+                        "Unable to withdraw transfer amount."
+                );
+            }
+
+            if (!receiver.transferIn(amount)) {
+
+                sender.transferIn(amount);
+
+                throw new BankingException(
+                        "Unable to credit receiver account."
+                );
+            }
+
+            sender.addTransaction(
+                    "TRANSFER SENT",
+                    amount,
+                    "Transfer sent to account "
+                            + receiverNumber
+            );
+
+            receiver.addTransaction(
+                    "TRANSFER RECEIVED",
+                    amount,
+                    "Transfer received from account "
+                            + senderNumber
+            );
+
+            saveAccounts();
+
+            auditLogger.log(
+                    "TRANSFER | From: "
+                            + senderNumber
+                            + " | To: "
+                            + receiverNumber
+                            + " | Amount: "
+                            + String.format(
+                                    "%.2f",
+                                    amount
+                            )
+            );
+
+            return true;
+
+        } catch (BankingException e) {
+
+            System.out.println(
+                    "Transfer error: "
+                            + e.getMessage()
+            );
+
+            return false;
+        }
+    }
+
+    private void validateTransfer(
+            String senderNumber,
+            String receiverNumber,
+            double amount)
+            throws BankingException {
+
         if (!InputValidator.isValidAmount(amount)) {
-            return false;
+
+            throw new BankingException(
+                    "Transfer amount must be greater than 0."
+            );
         }
 
-        Account sender = findAccount(senderNumber);
-        Account receiver = findAccount(receiverNumber);
+        Account sender =
+                findAccount(senderNumber);
 
-        if (sender == null || receiver == null) {
-            return false;
+        Account receiver =
+                findAccount(receiverNumber);
+
+        if (sender == null) {
+
+            throw new BankingException(
+                    "Sender account not found."
+            );
         }
 
-        if (!sender.isActive()
-                || !receiver.isActive()) {
+        if (receiver == null) {
 
-            return false;
+            throw new BankingException(
+                    "Receiver account not found."
+            );
+        }
+
+        if (!sender.isActive()) {
+
+            throw new BankingException(
+                    "Sender account is closed."
+            );
+        }
+
+        if (!receiver.isActive()) {
+
+            throw new BankingException(
+                    "Receiver account is closed."
+            );
         }
 
         if (senderNumber.equals(receiverNumber)) {
-            return false;
+
+            throw new BankingException(
+                    "Sender and receiver accounts "
+                            + "cannot be the same."
+            );
         }
 
-        /*
-         * Savings accounts cannot transfer more than
-         * their available balance.
-         */
         if (sender instanceof SavingsAccount) {
 
             if (amount > sender.getBalance()) {
-                return false;
+
+                throw new BankingException(
+                        "Insufficient balance in "
+                                + "savings account."
+                );
             }
 
-        /*
-         * Current accounts can use their overdraft limit.
-         */
         } else if (sender instanceof CurrentAccount) {
 
             CurrentAccount currentAccount =
@@ -223,61 +413,42 @@ public class Bank {
 
             if (amount >
                     sender.getBalance()
-                            + currentAccount.getOverdraftLimit()) {
+                            + currentAccount
+                            .getOverdraftLimit()) {
 
-                return false;
+                throw new BankingException(
+                        "Amount exceeds available balance "
+                                + "and overdraft limit."
+                );
             }
         }
-
-        /*
-         * Remove the amount from the sender.
-         */
-        if (!sender.transferOut(amount)) {
-            return false;
-        }
-
-        /*
-         * Add the amount to the receiver.
-         * If this fails, restore the sender's balance.
-         */
-        if (!receiver.transferIn(amount)) {
-
-            sender.transferIn(amount);
-
-            return false;
-        }
-
-        /*
-         * Record a separate transaction for the sender.
-         */
-        sender.addTransaction(
-                "TRANSFER SENT",
-                amount,
-                "Transfer sent to account "
-                        + receiverNumber
-        );
-
-        /*
-         * Record a separate transaction for the receiver.
-         */
-        receiver.addTransaction(
-                "TRANSFER RECEIVED",
-                amount,
-                "Transfer received from account "
-                        + senderNumber
-        );
-
-        saveAccounts();
-
-        return true;
     }
 
     public boolean verifyAdmin(
             String username,
             String password) {
 
-        return admin.getUsername().equals(username)
-                && admin.verifyPassword(password);
+        boolean verified =
+                admin.getUsername()
+                        .equals(username)
+                        && admin.verifyPassword(password);
+
+        if (verified) {
+
+            auditLogger.log(
+                    "ADMIN LOGIN SUCCESS | Username: "
+                            + username
+            );
+
+        } else {
+
+            auditLogger.log(
+                    "ADMIN LOGIN FAILED | Username: "
+                            + username
+            );
+        }
+
+        return verified;
     }
 
     public List<Account> getAllAccounts() {
@@ -382,7 +553,8 @@ public class Bank {
 
             System.out.println(
                     "Customer Name  : "
-                            + account.getCustomer().getName()
+                            + account.getCustomer()
+                            .getName()
             );
 
             System.out.println(
@@ -425,7 +597,9 @@ public class Bank {
             if (account.getCustomer()
                     .getName()
                     .toLowerCase()
-                    .contains(name.toLowerCase())) {
+                    .contains(
+                            name.toLowerCase()
+                    )) {
 
                 results.add(account);
             }
@@ -437,29 +611,58 @@ public class Bank {
     public boolean closeAccountByAdmin(
             String accountNumber) {
 
-        Account account =
-                findAccount(accountNumber);
+        try {
 
-        if (account == null) {
-            return false;
-        }
+            Account account =
+                    findAccount(accountNumber);
 
-        if (!account.isActive()) {
-            return false;
-        }
+            if (account == null) {
 
-        if (account.getBalance() != 0) {
-            return false;
-        }
+                throw new BankingException(
+                        "Account not found."
+                );
+            }
 
-        boolean closed =
-                account.closeAccount();
+            if (!account.isActive()) {
 
-        if (closed) {
+                throw new BankingException(
+                        "Account is already closed."
+                );
+            }
+
+            if (account.getBalance() != 0) {
+
+                throw new BankingException(
+                        "Account balance must be zero "
+                                + "before closure."
+                );
+            }
+
+            if (!account.closeAccount()) {
+
+                throw new BankingException(
+                        "Unable to close account."
+                );
+            }
+
             saveAccounts();
-        }
 
-        return closed;
+            auditLogger.log(
+                    "ADMIN ACCOUNT CLOSURE | Account: "
+                            + accountNumber
+            );
+
+            return true;
+
+        } catch (BankingException e) {
+
+            System.out.println(
+                    "Account closure error: "
+                            + e.getMessage()
+            );
+
+            return false;
+        }
     }
 
     public Account getAccountForAdmin(
@@ -598,7 +801,8 @@ public class Bank {
                              new FileInputStream(file))) {
 
             accounts =
-                    (List<Account>) input.readObject();
+                    (List<Account>)
+                            input.readObject();
 
         } catch (IOException
                  | ClassNotFoundException e) {
@@ -608,7 +812,8 @@ public class Bank {
                             + e.getMessage()
             );
 
-            accounts = new ArrayList<>();
+            accounts =
+                    new ArrayList<>();
         }
     }
 
