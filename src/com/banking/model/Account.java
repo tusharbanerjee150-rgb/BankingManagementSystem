@@ -15,7 +15,6 @@ public abstract class Account implements Serializable {
     protected String pin;
     protected double balance;
     protected boolean active;
-
     protected List<Transaction> transactions;
 
     public Account(
@@ -101,7 +100,6 @@ public abstract class Account implements Serializable {
         }
 
         balance -= amount;
-
         return true;
     }
 
@@ -112,7 +110,6 @@ public abstract class Account implements Serializable {
         }
 
         balance += amount;
-
         return true;
     }
 
@@ -158,41 +155,51 @@ public abstract class Account implements Serializable {
     public void displayDetails() {
 
         System.out.println("\n========== ACCOUNT DETAILS ==========");
+
         System.out.println(
                 "Account Number : " + accountNumber
         );
+
         System.out.println(
                 "Customer ID    : "
                         + customer.getCustomerId()
         );
+
         System.out.println(
                 "Customer Name  : "
                         + customer.getName()
         );
+
         System.out.println(
                 "Phone          : "
                         + customer.getPhone()
         );
+
         System.out.println(
                 "Email          : "
                         + customer.getEmail()
         );
+
         System.out.println(
                 "Address        : "
                         + customer.getAddress()
         );
+
         System.out.println(
                 "Account Type   : "
                         + getAccountType()
         );
+
         System.out.printf(
                 "Balance        : %.2f%n",
                 balance
         );
+
         System.out.println(
                 "Status         : "
                         + (active ? "ACTIVE" : "CLOSED")
         );
+
         System.out.println(
                 "====================================="
         );

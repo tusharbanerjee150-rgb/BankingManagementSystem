@@ -203,12 +203,19 @@ public class Bank {
             return false;
         }
 
+        /*
+         * Savings accounts cannot transfer more than
+         * their available balance.
+         */
         if (sender instanceof SavingsAccount) {
 
             if (amount > sender.getBalance()) {
                 return false;
             }
 
+        /*
+         * Current accounts can use their overdraft limit.
+         */
         } else if (sender instanceof CurrentAccount) {
 
             CurrentAccount currentAccount =
@@ -222,10 +229,17 @@ public class Bank {
             }
         }
 
+        /*
+         * Remove the amount from the sender.
+         */
         if (!sender.transferOut(amount)) {
             return false;
         }
 
+        /*
+         * Add the amount to the receiver.
+         * If this fails, restore the sender's balance.
+         */
         if (!receiver.transferIn(amount)) {
 
             sender.transferIn(amount);
@@ -233,15 +247,21 @@ public class Bank {
             return false;
         }
 
+        /*
+         * Record a separate transaction for the sender.
+         */
         sender.addTransaction(
-                "TRANSFER",
+                "TRANSFER SENT",
                 amount,
                 "Transfer sent to account "
                         + receiverNumber
         );
 
+        /*
+         * Record a separate transaction for the receiver.
+         */
         receiver.addTransaction(
-                "TRANSFER",
+                "TRANSFER RECEIVED",
                 amount,
                 "Transfer received from account "
                         + senderNumber
