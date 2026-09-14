@@ -305,4 +305,3 @@ BankingManagementSystem/
 ├── build.sh
 ├── README.md
 ├── statement.md
-└── requirements.txt
